@@ -1,0 +1,4 @@
+# Customer1_response 
+http://x.x.x.x:8060/api/json/nfadevice/getConvData?apiKey=yourAPIkey&DeviceID=xxxxxx&IPGroup=true&rows=10&pageCount=1&isNetwork=false&GroupBy=&ResolveDNS=false&Data=IN&TimeFrame=hourly&collOpt=1 
+# Customer2_response 
+http://x.x.x.x:8060/api/json/nfadevice/getConvData?apiKey=yourAPIkey&DeviceID=xxxxxx&IPGroup=true&rows=10&pageCount=1&isNetwork=false&GroupBy=&ResolveDNS=false&Data=IN&TimeFrame=hourly&collOpt=1 
