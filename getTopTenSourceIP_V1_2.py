@@ -1,8 +1,22 @@
-import json, os, time, requests, csv
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import json, os, time, requests, csv, sys, re
 import pandas as pd
 from json import loads
+import tkinter as tk
+from tkinter import simpledialog
+from tkinter import messagebox
 from dicttoxml import dicttoxml
+from pprint import pprint
 from xml.etree import ElementTree
+
+
+# In[ ]:
+
 
 def getXMLfile(response):
     # getName
@@ -47,6 +61,9 @@ def getXMLfile(response):
     outfile.close()
 
 
+# In[ ]:
+
+
 def xmlConvertToCSV(response):
     # getName
     name = response.json()['devDetails']['hdrTitle']
@@ -68,7 +85,7 @@ def xmlConvertToCSV(response):
        
     # write rowdata to csv file
     for event in root.findall('Data/item'):  
-
+        
         event_data = []
         hdrTitle = root.find('devDetails/hdrTitle')
         if hdrTitle != None :
@@ -128,6 +145,9 @@ def xmlConvertToCSV(response):
     os.chdir('../')
 
 
+# In[ ]:
+
+
 def combineAllCSVtoOneXLSX():
     # get path where csv files locate
     newdir = os.getcwd()+"\\CSVFILE" 
@@ -143,39 +163,92 @@ def combineAllCSVtoOneXLSX():
     writer.save()
 
 
-if __name__ == '__main__':
-    # get the AIP list for each customer from text file
-    with open(os.getcwd()+"\\clientAIPlists.txt", "r") as f:
-        clientAPIURLs = f.readlines()
-        
-    # remove whitespace characters like `\n` at the end of each line
-    clientAPIURLs = [x.strip() for x in clientAPIURLs] 
-    # delete the even index number items which are notes in text file
-    del clientAPIURLs[0::2]
+# In[ ]:
 
-    # declare a list to save requests
-    index = 0
-    # change "count" to meet your response number
-    count = 27
-    clientResponseList= list(range(0, 27))
 
-    # get a list of requests of all clients
-    while index < len(clientAPIURLs):
-        for APIURL in clientAPIURLs:
-            clientResponseList[index] = requests.get(APIURL)
-            index = index + 1
-
-    # create a document
+def deleteXMLfile(response):
+    # getName
+    name = response.json()['devDetails']['hdrTitle']
     try:
-        os.mkdir(os.getcwd()+"\\CSVFILE")
+        os.remove(os.getcwd()+"\\"+name+".xml")
     except os.error:
         pass
 
-    for client in clientResponseList:
-        # get all the xml files
-        getXMLfile(client)
-        # get all the csv files
-        xmlConvertToCSV(client)
 
-    # combine all csv files into one xlsx file named combined.xlsx
-    combineAllCSVtoOneXLSX()
+# In[ ]:
+
+
+window = tk.Tk()
+window.withdraw()
+
+# define specific IN/OUT via interaction GUI
+inOrOut = simpledialog.askstring(title="IN or OUT", prompt="Please enter IN or OUT :")
+messagebox.showinfo("Information", "DATA is " + inOrOut)
+print("YOU CHOOSE TRAFFIC 'IN'")
+
+# define specific rows via interaction GUI
+rows = simpledialog.askstring(title="Rows?", prompt="Please enter a row number:")
+messagebox.showinfo("Information", "Rows are " + rows)
+print("YOU CHOOSE " + rows + " ROWS")
+
+# define specific startTime via interaction GUI
+startTime = simpledialog.askstring(title="StartTime", prompt="Please enter start time : for example=> 2020-04-01 00:00")
+messagebox.showinfo("Information", "StartTime is " + startTime)
+print("START TIME IS: " + startTime)
+
+# define specific endTime via interaction GUI
+endTime = simpledialog.askstring(title="EndTime", prompt="Please enter end time : for example=> 2020-05-01 00:00")
+messagebox.showinfo("Information", "The neighbor is " + endTime)
+print("END TIME IS: " + endTime)
+
+extendedQuery = "&Data=" + inOrOut+ "&rows=" + rows + "&StartTime=" + startTime + "&EndTime=" + endTime
+
+
+# In[ ]:
+
+
+# get the AIP list for each customer from text file
+with open(os.getcwd()+"\\clientAIPlists.txt", "r") as f:
+    clientAPIURLs = f.readlines()
+    
+# remove whitespace characters like `\n` at the end of each line
+clientAPIURLs = [x.strip() for x in clientAPIURLs] 
+
+# delete the even index number items which are notes in text file
+del clientAPIURLs[0::2]
+
+# declare a list to save requests
+index = 0
+clientResponseList= list(range(0, len(clientAPIURLs)))
+
+# get a list of requests of all clients
+while index < len(clientAPIURLs):
+    for APIURL in clientAPIURLs:
+        APIURL = APIURL + extendedQuery
+        clientResponseList[index] = requests.get(APIURL)
+        index = index + 1
+       
+# create a document
+try:
+    os.mkdir(os.getcwd()+"\\CSVFILE")
+except os.error:
+    pass
+
+
+# In[ ]:
+
+
+print("Processing............")
+for client in clientResponseList:
+    # get all the xml files
+    getXMLfile(client)
+    # get all the csv files
+    xmlConvertToCSV(client)
+    # delete xml file
+    deleteXMLfile(client)
+    
+# combine all cav files into one xlsx file named combined.xlsx
+combineAllCSVtoOneXLSX()
+# inform the process has been completed
+messagebox.showinfo("Information", "Success !! The Process has been completed. Check out the combined.xlsx")
+
